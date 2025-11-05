@@ -8,10 +8,10 @@ const socket = require("socket.io");
 
 const app = express();
 
-const cors = require("cors");
+const cors = require('cors');
 app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
+  origin: [process.env.CLIENT_URL || "http://localhost:3000"],
+  credentials: true
 }));
 
 app.use(express.json());
@@ -39,14 +39,9 @@ app.get("/ping", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-const server = app.listen(PORT, () => console.log(`Server started on ${PORT}`));
+const server = app.listen(PORT, () => console.log('Server started', PORT));
+const io = require('socket.io')(server, { cors: { origin: process.env.CLIENT_URL || "http://localhost:3000", credentials: true }});
 
-const io = socket(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    credentials: true,
-  },
-});
 
 global.onlineUsers = new Map();
 io.on("connection", (socket) => {
