@@ -16,7 +16,7 @@ const normalize = (u) => (u ? u.replace(/\/+$/, "") : u);
 
 const envClient = normalize(process.env.CLIENT_URL);
 const defaultLocal = "http://localhost:3000";
-const vercelExample = "https://chat-alpha-kohl.vercel.app/"; 
+const vercelExample = "https://chat-alpha-kohl.vercel.app"; 
 const allowedOrigins = [
   envClient,
   defaultLocal,
@@ -98,7 +98,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send-msg", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
+    const sendUserSocket = onlineUsers.get(data.to); 
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("msg-recieve", data.msg);
     }
