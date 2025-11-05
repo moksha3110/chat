@@ -11,7 +11,6 @@ export default function ChatContainer({ currentChat, socket }) {
   const [arrivalMessage, setArrivalMessage] = useState(null);
   const scrollRef = useRef();
 
-  // 🧩 Load messages whenever chat changes
   useEffect(() => {
     const fetchMessages = async () => {
       if (!currentChat) return;
@@ -32,28 +31,24 @@ export default function ChatContainer({ currentChat, socket }) {
     fetchMessages();
   }, [currentChat]);
 
-  // 🧩 Handle sending a message
   const handleSendMsg = async (msg) => {
     const stored = localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY);
     if (!stored || !currentChat) return;
     const data = JSON.parse(stored);
 
     try {
-      // emit message through socket
       socket.current.emit("send-msg", {
         to: currentChat._id,
         from: data._id,
         msg,
       });
 
-      // persist to backend
       await axios.post(sendMessageRoute, {
         from: data._id,
         to: currentChat._id,
         message: msg,
       });
 
-      // add to local messages
       const msgs = [...messages, { fromSelf: true, message: msg }];
       setMessages(msgs);
     } catch (err) {
@@ -61,29 +56,30 @@ export default function ChatContainer({ currentChat, socket }) {
     }
   };
 
-  // 🧩 Listen for incoming messages via socket
-  useEffect(() => {
-    if (!socket.current) return;
-    const handler = (msg) => setArrivalMessage({ fromSelf: false, message: msg });
-    socket.current.on("msg-recieve", handler);
 
-    // cleanup listener on unmount or socket change
-    return () => socket.current.off("msg-recieve", handler);
-  }, [socket]);
+useEffect(() => {
+  if (!socket?.current) return;
 
-  // 🧩 Append new arrival messages
+  const handler = (msg) => setArrivalMessage({ fromSelf: false, message: msg });
+  socket.current.on("msg-recieve", handler);
+
+  return () => {
+    socket.current?.off("msg-recieve", handler);
+  };
+  
+}, []);
+
+
   useEffect(() => {
     if (arrivalMessage) {
       setMessages((prev) => [...prev, arrivalMessage]);
     }
   }, [arrivalMessage]);
 
-  // 🧩 Auto-scroll on new message
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 🧩 If no chat selected yet
   if (!currentChat) {
     return (
       <Container>
@@ -130,7 +126,6 @@ export default function ChatContainer({ currentChat, socket }) {
   );
 }
 
-// 🧱 Styled component
 const Container = styled.div`
   display: grid;
   grid-template-rows: 10% 80% 10%;
